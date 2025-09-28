@@ -1,8 +1,8 @@
-# API de Analíticas de Ciencia de Datos
+# API Analítica de Ciencia de Datos
 
 ## Resumen General
 
-Esta API basada en FastAPI proporciona endpoints de análisis de datos para procesar y analizar datos empresariales almacenados en AWS S3. La API se especializa en procesar datos de reclamos, pagos y auditorías de transacciones de varias fuentes de bases de datos (Cassandra, MySQL, PostgreSQL) que han sido ingeridas en S3.
+Esta API basada en FastAPI proporciona endpoints de análisis de datos para procesar y analizar datos empresariales almacenados en AWS S3. La API se especializa en procesar datos de la empresa Primac de varias fuentes de bases de datos (Cassandra, MySQL y PostgreSQL) que han sido ingeridas en S3.
 
 ## Características
 
@@ -100,7 +100,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
 
 1. **Clonar y navegar al proyecto:**
    ```bash
-   cd services/data_science_api
+   cd API-Analytic-Primac
    ```
 
 2. **Crear un entorno virtual:**
@@ -131,7 +131,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
 
 1. **Construir la imagen de Docker:**
    ```bash
-   docker build -t data-science-api .
+   docker build -t API-Analytic-Primac .
    ```
 
 2. **Ejecutar con Docker:**
@@ -141,7 +141,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
      -e AWS_SECRET_ACCESS_KEY="tu_clave_secreta" \
      -e AWS_DEFAULT_REGION="us-east-1" \
      -e S3_BUCKET="ingesta-de-datos" \
-     data-science-api
+     API-Analytic-Primac
    ```
 
 ### Configuración con Docker Compose
@@ -153,12 +153,12 @@ Desde el directorio raíz del proyecto:
    AWS_ACCESS_KEY_ID=tu_clave_de_acceso
    AWS_SECRET_ACCESS_KEY=tu_clave_secreta
    AWS_DEFAULT_REGION=us-east-1
-   S3_BUCKET=ingesta-de-datos
+   S3_BUCKET=nombre-del-bucket
    ```
 
 2. **Iniciar el servicio:**
    ```bash
-   docker-compose up data-science-api
+   docker-compose up API-Analytic-Primac
    ```
 
 ## Ejemplos de Uso
@@ -209,7 +209,7 @@ Una vez que la API esté ejecutándose, puedes acceder a:
 ### Estructura S3 Esperada
 
 ```
-s3://ingesta-de-datos/
+s3://nombre-del-bucket/
 ├── cassandra/
 │   ├── reclamos/
 │   │   └── reclamos.csv
@@ -219,28 +219,7 @@ s3://ingesta-de-datos/
 │       └── transaction_audit.csv
 ```
 
-### Expectativas de Esquema CSV
-
-**reclamos.csv (Reclamos)**
-- `estado`: Estado del reclamo (string)
-- Otras columnas según sea necesario
-
-**pagos.csv (Pagos)**
-- `monto`: Monto del pago (numérico)
-- Otras columnas según sea necesario
-
-**transaction_audit.csv (Auditoría de Transacciones)**
-- `servicio`: Nombre del servicio (string)
-- Otras columnas según sea necesario
-
 ## Despliegue
-
-### Consideraciones de Producción
-
-1. **Seguridad**: Usar roles de IAM en lugar de credenciales codificadas
-2. **Monitoreo**: Implementar logging y monitoreo
-3. **Escalamiento**: Considerar usar AWS ECS, EKS, u orquestación de contenedores similar
-4. **Balanceamiento de Carga**: Usar Application Load Balancer para múltiples instancias
 
 ### Ejemplo de Despliegue en AWS ECS
 
@@ -325,10 +304,10 @@ flake8 main.py
 ### Docker
 ```bash
 # Construir imagen
-docker build -t data-science-api .
+docker build -t API-Analytic-Primac .
 
 # Ejecutar contenedor
-docker run -p 8000:8000 data-science-api
+docker run -p 8000:8000 API-Analytic-Primac
 
 # Ver logs del contenedor
 docker logs <container_id>
@@ -343,28 +322,11 @@ docker exec -it <container_id> /bin/bash
 aws configure
 
 # Listar objetos en S3
-aws s3 ls s3://ingesta-de-datos/
+aws s3 ls s3://nombre-del-bucket/
 
 # Descargar archivo de S3
-aws s3 cp s3://ingesta-de-datos/cassandra/reclamos/reclamos.csv ./
+aws s3 cp s3://nombre-del-bucket/cassandra/reclamos/reclamos.csv ./
 
 # Verificar permisos de bucket
-aws s3api get-bucket-policy --bucket ingesta-de-datos
+aws s3api get-bucket-policy --bucket nombre-del-bucket
 ```
-
-## Preguntas Frecuentes (FAQ)
-
-### P: ¿Cómo cambio el bucket de S3?
-**R:** Modifica la variable de entorno `S3_BUCKET` o el valor por defecto en el código.
-
-### P: ¿Puedo usar otras fuentes de datos además de S3?
-**R:** Actualmente la API está diseñada para S3. Para otras fuentes, necesitarías modificar la función `load_csv()`.
-
-### P: ¿Cómo agrego nuevos endpoints?
-**R:** Añade nuevas funciones con decoradores `@app.get()` en `main.py` siguiendo el patrón existente.
-
-### P: ¿La API soporta autenticación?
-**R:** Actualmente no incluye autenticación. Para producción, considera añadir JWT o API keys.
-
-### P: ¿Cómo escalo la aplicación?
-**R:** Usa orquestadores de contenedores como Kubernetes, AWS ECS, o AWS Lambda para escalar automáticamente.
