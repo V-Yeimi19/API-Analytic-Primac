@@ -3,7 +3,7 @@ import boto3
 import pandas as pd
 import os
 
-app = FastAPI(title="Data Science API")
+app = FastAPI(title="API Analytics")
 
 # Configuración S3
 BUCKET = os.getenv("S3_BUCKET", "ingesta-de-datos")
@@ -22,16 +22,16 @@ def load_csv(key: str) -> pd.DataFrame:
 
 @app.get("/claims/stats")
 def claims_stats():
-    df = load_csv("cassandra/reclamos.csv")
+    df = load_csv("cassandra/reclamos/reclamos.csv")
     return df["estado"].value_counts().to_dict()
 
 @app.get("/payments/avg")
 def payments_avg():
-    df = load_csv("cassandra/pagos.csv")
+    df = load_csv("cassandra/pagos/pagos.csv")
     return {"avg_monto": df["monto"].mean()}
 
 @app.get("/audits/top-services")
 def audits_top_services():
-    df = load_csv("cassandra/transaction_audit.csv")
+    df = load_csv("cassandra/transaction_audit/transaction_audit.csv")
     return df["servicio"].value_counts().head(5).to_dict()
 
