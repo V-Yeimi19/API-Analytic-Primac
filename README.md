@@ -85,7 +85,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
 | `AWS_SECRET_ACCESS_KEY` | Clave de Acceso Secreta de AWS | Requerido |
 | `AWS_SESSION_TOKEN` | Token de Sesión de AWS (si usa credenciales temporales) | Opcional |
 | `AWS_DEFAULT_REGION` | Región de AWS | `us-east-1` |
-| `S3_BUCKET` | Nombre del bucket S3 que contiene los datos | `ingesta-de-datos` |
+| `S3_BUCKET` | Nombre del bucket S3 que contiene los datos | `nombre-del-bucket` |
 
 ## Instalación y Configuración
 
