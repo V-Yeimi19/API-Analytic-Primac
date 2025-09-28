@@ -226,9 +226,9 @@ s3://nombre-del-bucket/
 ```bash
 # Construir y subir a ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-docker build -t data-science-api .
-docker tag data-science-api:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/data-science-api:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/data-science-api:latest
+docker build -t API-Analytic-Primac .
+docker tag API-Analytic-Primac:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
 ```
 
 ## Dependencias
