@@ -119,7 +119,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
    export AWS_ACCESS_KEY_ID="tu_clave_de_acceso"
    export AWS_SECRET_ACCESS_KEY="tu_clave_secreta"
    export AWS_DEFAULT_REGION="us-east-1"
-   export S3_BUCKET="ingesta-de-datos"
+   export S3_BUCKET="nombre-del-bucket"
    ```
 
 5. **Ejecutar la aplicación:**
