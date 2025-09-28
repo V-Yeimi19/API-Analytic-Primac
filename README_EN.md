@@ -85,7 +85,7 @@ The API requires the following environment variables for AWS S3 integration:
 | `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key | Required |
 | `AWS_SESSION_TOKEN` | AWS Session Token (if using temporary credentials) | Optional |
 | `AWS_DEFAULT_REGION` | AWS Region | `us-east-1` |
-| `S3_BUCKET` | S3 Bucket name containing the data | `ingesta-de-datos` |
+| `S3_BUCKET` | S3 Bucket name containing the data | `bucket's-name` |
 
 ## Installation & Setup
 
@@ -100,7 +100,7 @@ The API requires the following environment variables for AWS S3 integration:
 
 1. **Clone and navigate to the project:**
    ```bash
-   cd services/data_science_api
+   cd API-Analytic-Primac
    ```
 
 2. **Create a virtual environment:**
@@ -119,7 +119,7 @@ The API requires the following environment variables for AWS S3 integration:
    export AWS_ACCESS_KEY_ID="your_access_key"
    export AWS_SECRET_ACCESS_KEY="your_secret_key"
    export AWS_DEFAULT_REGION="us-east-1"
-   export S3_BUCKET="ingesta-de-datos"
+   export S3_BUCKET="bucket's-name"
    ```
 
 5. **Run the application:**
@@ -131,7 +131,7 @@ The API requires the following environment variables for AWS S3 integration:
 
 1. **Build the Docker image:**
    ```bash
-   docker build -t data-science-api .
+   docker build -t API-Analytic-Primac .
    ```
 
 2. **Run with Docker:**
@@ -140,8 +140,8 @@ The API requires the following environment variables for AWS S3 integration:
      -e AWS_ACCESS_KEY_ID="your_access_key" \
      -e AWS_SECRET_ACCESS_KEY="your_secret_key" \
      -e AWS_DEFAULT_REGION="us-east-1" \
-     -e S3_BUCKET="ingesta-de-datos" \
-     data-science-api
+     -e S3_BUCKET="bucket's-name" \
+     API-Analytic-Primac
    ```
 
 ### Docker Compose Setup
@@ -153,12 +153,12 @@ From the project root directory:
    AWS_ACCESS_KEY_ID=your_access_key
    AWS_SECRET_ACCESS_KEY=your_secret_key
    AWS_DEFAULT_REGION=us-east-1
-   S3_BUCKET=ingesta-de-datos
+   S3_BUCKET=bucket's-name
    ```
 
 2. **Start the service:**
    ```bash
-   docker-compose up data-science-api
+   docker-compose up API-Analytic-Primac
    ```
 
 ## Usage Examples
@@ -209,7 +209,7 @@ Once the API is running, you can access:
 ### Expected S3 Structure
 
 ```
-s3://ingesta-de-datos/
+s3://bucket's-name/
 ├── cassandra/
 │   ├── reclamos/
 │   │   └── reclamos.csv
@@ -218,20 +218,6 @@ s3://ingesta-de-datos/
 │   └── transaction_audit/
 │       └── transaction_audit.csv
 ```
-
-### CSV Schema Expectations
-
-**reclamos.csv (Claims)**
-- `estado`: Claim status (string)
-- Other columns as needed
-
-**pagos.csv (Payments)**
-- `monto`: Payment amount (numeric)
-- Other columns as needed
-
-**transaction_audit.csv (Transaction Audit)**
-- `servicio`: Service name (string)
-- Other columns as needed
 
 ## Deployment
 
@@ -247,9 +233,9 @@ s3://ingesta-de-datos/
 ```bash
 # Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-docker build -t data-science-api .
-docker tag data-science-api:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/data-science-api:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/data-science-api:latest
+docker build -t API-Analytic-Primac .
+docker tag API-Analytic-Primac:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
 ```
 
 ## Dependencies
