@@ -140,7 +140,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
      -e AWS_ACCESS_KEY_ID="tu_clave_de_acceso" \
      -e AWS_SECRET_ACCESS_KEY="tu_clave_secreta" \
      -e AWS_DEFAULT_REGION="us-east-1" \
-     -e S3_BUCKET="ingesta-de-datos" \
+     -e S3_BUCKET="nombre-del-bucket" \
      API-Analytic-Primac
    ```
 
