@@ -232,9 +232,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
 
 ### Orchestrator Unificado
 
-El proyecto incluye un script de orquestación mejorado que gestiona MySQL, PostgreSQL y Cassandra:
-
-**Ubicación:** ``
+El proyecto incluye un script de orquestación mejorado que gestiona MySQL, PostgreSQL y Cassandra.
 
 ```bash
 # Levantar todas las bases de datos + setup + seed
