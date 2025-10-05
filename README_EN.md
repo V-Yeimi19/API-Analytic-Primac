@@ -212,7 +212,7 @@ The API requires the following environment variables for AWS S3 integration:
 
 ### Unified Orchestrator
 
-The project includes an improved orchestration script that manages MySQL, PostgreSQL, and Cassandra
+The project includes an improved orchestration script that manages MySQL, PostgreSQL and Cassandra.
 
 ```bash
 # Start all databases + setup + seed
@@ -232,7 +232,7 @@ python orchestrator.py cassandra+setup
 python orchestrator.py faker
 ```
 
-### Database Project
+## Database Project
 
 
 ## API Installation and Setup
