@@ -2,24 +2,24 @@
 
 ## Overview
 
-This FastAPI-based API provides advanced data analysis endpoints for processing and analyzing enterprise data stored in AWS S3. The API specializes in processing Primac company data from multiple database sources (MySQL, PostgreSQL, and Cassandra) that have been ingested and stored in S3 for unified analysis.
+This FastAPI-based API provides essential data analysis endpoints for processing and analyzing enterprise data stored in AWS S3. The API specializes in processing Primac company data from multiple database sources (MySQL, PostgreSQL and Cassandra) that have been ingested and stored in S3 for unified analysis.
 
 ## Key Features
 
 ### 📊 Multi-Database Analytics
-- **MySQL Analytics**: Analysis of users, clients, agents, and beneficiaries
-- **PostgreSQL Analytics**: Analysis of products, policies, and coverages
-- **Cassandra Analytics**: Analysis of claims, payments, and transaction audits
+- **MySQL Analytics**: 2 queries - User statistics + Growth by state
+- **PostgreSQL Analytics**: 2 queries - Product analysis + Product profitability
+- **Cassandra Analytics**: 2 queries - Claims analysis + Claims-payments correlation
 
-### 🔗 Cross-System Analytics
-- **Customer Journey**: Complete customer journey analysis across systems
-- **Agent Performance**: Agent performance combining data from multiple sources
-- **Claims vs Policies**: Claims analysis crossing policies and claims data
+### 🔗 Cross-System Analytics (3 Key Queries)
+- **Customer Policy Profile**: Customer and policy profile (MySQL + PostgreSQL)
+- **Agent Performance**: Agent performance across systems (MySQL + PostgreSQL)
+- **Claims vs Policies**: Claims analysis (PostgreSQL + Cassandra)
 
 ### 🎨 Technical Features
 - **High Performance**: Built with FastAPI for optimal performance
 - **S3 Integration**: Direct processing from AWS S3 without direct DB connections
-- **Specialized Queries**: Advanced queries with customizable parameters
+- **Clean Architecture**: Simplified and maintainable code
 - **Containerized**: Ready-to-deploy Docker container
 - **Interactive Documentation**: Swagger UI and ReDoc included
 
@@ -29,7 +29,7 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 ┌────────────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
 │      Data Sources      │    │    AWS S3 Bucket    │    │     Analytics API     │
 │                        │───▶│                      │───▶│                       │
-│ • MySQL (Users)       │    │ • mysql/*.csv        │    │ • MySQL Analytics     │
+│ • MySQL (Users)        │    │ • mysql/*.csv        │    │ • MySQL Analytics     │
 │ • PostgreSQL (Policies)│    │ • postgresql/*.csv   │    │ • PostgreSQL Analytics│
 │ • Cassandra (Payments) │    │ • cassandra/*.csv    │    │ • Cassandra Analytics │
 │                        │    │                      │    │ • Cross-Analytics     │
@@ -37,7 +37,7 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 ```
 
 ### Data Flow
-1. **Ingestion**: Data from MySQL, PostgreSQL, and Cassandra is ingested into AWS S3
+1. **Ingestion**: Data from MySQL, PostgreSQL and Cassandra is ingested into AWS S3
 2. **Storage**: Data is stored as CSV files organized by source
 3. **Analysis**: The API reads directly from S3 and processes data using Pandas
 4. **Response**: Results are returned as structured JSON
@@ -45,7 +45,7 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 ## Complete Endpoint Documentation
 
 **Base URL**: `http://localhost:8000`  
-**Version**: `3.0.0` (S3 Analytics Optimized)
+**Version**: `2.0.0` (S3 Analytics)
 
 ### 🟢 Health Check
 
@@ -55,10 +55,16 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 ```json
 {
     "message": "API Analytics - Primac S3",
-    "version": "3.0.0",
+    "version": "2.0.0",
     "status": "OK",
     "data_source": "S3 Bucket",
-    "available_databases": ["MySQL", "PostgreSQL", "Cassandra"]
+    "available_databases": ["MySQL", "PostgreSQL", "Cassandra"],
+    "endpoints": {
+        "mysql": 2,
+        "postgresql": 2,
+        "cassandra": 2,
+        "cross_microservice": 3
+    }
 }
 ```
 
@@ -82,100 +88,42 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 }
 ```
 
-#### GET `/data/info`
-**Description**: Information about available datasets  
-**Response**:
-```json
-{
-    "available_data": {
-        "mysql": ["users", "clients", "agents", "beneficiaries"],
-        "postgresql": ["products", "policies", "policy_coverage", "beneficiaries"],
-        "cassandra": ["reclamos", "pagos", "transaction_audit"]
-    },
-    "data_paths": {
-        "mysql": {"users": "mysql/users/users.csv"},
-        "postgresql": {"products": "postgresql/products/products.csv"},
-        "cassandra": {"reclamos": "cassandra/reclamos/reclamos.csv"}
-    }
-}
-```
+## 🎯 ENDPOINTS (11 Total)
 
-### 📊 MySQL Analytics (Users and Clients)
+### 📊 MySQL Analytics (2 endpoints)
 
-**General Endpoints:**
-- **GET** `/mysql/analytics/users` - Complete user statistics
-- **GET** `/mysql/analytics/clients/demographics` - Client demographic analysis
-- **GET** `/mysql/analytics/agents/performance` - Agent performance analysis
-- **GET** `/mysql/analytics/beneficiaries/relationships` - Beneficiary relationships
+**1. [GENERAL] User Statistics:**
+- **GET** `/mysql/analytics/users` - Complete user analysis including roles, states, and data quality
 
-**Specialized Queries:**
-- **GET** `/mysql/analytics/growth-by-state?months=12` - Growth by state
-- **GET** `/mysql/analytics/data-quality-report` - Data quality report
+**2. [SPECIFIC] Growth by State:**
+- **GET** `/mysql/analytics/growth-by-state?months=12` - User growth by state over N months
 
-### 📄 PostgreSQL Analytics (Products and Policies)
+### 📄 PostgreSQL Analytics (2 endpoints)
 
-**General Endpoints:**
-- **GET** `/postgresql/analytics/products` - Complete product analysis
-- **GET** `/postgresql/analytics/policies` - Detailed policy analysis
-- **GET** `/postgresql/analytics/coverages` - Coverage analysis
+**1. [GENERAL] Product Analysis:**
+- **GET** `/postgresql/analytics/products` - Complete product analysis including types, premiums, and codes
 
-**Specialized Queries:**
-- **GET** `/postgresql/analytics/product-profitability` - Product profitability
-- **GET** `/postgresql/analytics/policy-trends?months=12` - Temporal trends
+**2. [SPECIFIC] Product Profitability:**
+- **GET** `/postgresql/analytics/product-profitability` - Profitability analysis combining products and policies
 
-### 💰 Cassandra Analytics (Payments and Claims)
+### 💰 Cassandra Analytics (2 endpoints)
 
-**General Endpoints:**
-- **GET** `/cassandra/analytics/claims` - Complete claims analysis
-- **GET** `/cassandra/analytics/payments` - Complete payments analysis
-- **GET** `/cassandra/analytics/transaction-audit` - Transaction audit
+**1. [GENERAL] Claims Analysis:**
+- **GET** `/cassandra/analytics/claims` - Complete claims analysis including status, amounts, and temporal patterns
 
-**Specialized Queries:**
-- **GET** `/cassandra/analytics/claims-payments-correlation` - Claims-payments correlation
-- **GET** `/cassandra/analytics/activity-patterns?hours=168` - Activity patterns
+**2. [SPECIFIC] Claims-Payments Correlation:**
+- **GET** `/cassandra/analytics/claims-payments-correlation` - Correlation between claims and payments patterns
 
-### 🔗 Cross-Microservice Analytics (Cross-System Analysis)
+### 🔗 Cross-Microservice Analytics (3 key endpoints)
 
-- **GET** `/cross/analytics/customer-policy-profile` - Customer and policy profile (MySQL + PostgreSQL)
-- **GET** `/cross/analytics/agent-performance` - Agent performance (MySQL + PostgreSQL)
-- **GET** `/cross/analytics/claims-vs-policies` - Claims analysis (PostgreSQL + Cassandra)
-- **GET** `/cross/analytics/customer-journey` - Complete customer journey (MySQL + PostgreSQL + Cassandra)
+**1. [CROSS 1] Customer-Policy Profile:**
+- **GET** `/cross/analytics/customer-policy-profile` - JOIN MySQL + PostgreSQL for complete customer profile
 
-### 🔄 Legacy Analytics (Compatibility)
+**2. [CROSS 2] Agent Performance:**
+- **GET** `/cross/analytics/agent-performance` - JOIN MySQL + PostgreSQL for cross-system agent performance
 
-#### GET `/claims/stats`
-**Description**: Claims statistics from S3/Cassandra (Legacy)  
-**Response**:
-```json
-{
-    "aprobado": 150,
-    "pendiente": 75,
-    "rechazado": 25,
-    "en_revision": 50
-}
-```
-
-#### GET `/payments/avg`
-**Description**: Average payments from S3/Cassandra (Legacy)  
-**Response**:
-```json
-{
-    "avg_monto": 1250.75
-}
-```
-
-#### GET `/audits/top-services`
-**Description**: Top 5 most used services from audit  
-**Response**:
-```json
-{
-    "servicio_pagos": 342,
-    "autenticacion_usuario": 298,
-    "respaldo_datos": 187,
-    "servicio_notificaciones": 156,
-    "generacion_reportes": 134
-}
-```
+**3. [CROSS 3] Claims Analysis:**
+- **GET** `/cross/analytics/claims-vs-policies` - JOIN PostgreSQL + Cassandra for claims analysis
 
 ## 📝 Response Format and HTTP Codes
 
@@ -230,79 +178,21 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 }
 ```
 
-#### Cross-Analytics Customer Journey Response
+#### Cross-Analytics Customer Profile Response
 ```json
 {
-    "conversion_funnel": {
-        "total_users": 10000,
-        "users_to_clients": 8500,
-        "clients_to_policyholders": 6200,
-        "conversion_rates": {
-            "user_to_client": 85.0,
-            "client_to_policy": 72.9,
-            "overall_conversion": 62.0
-        }
+    "summary": {
+        "total_customers": 10000,
+        "customers_with_policies": 6200,
+        "penetration_rate": 62.0,
+        "total_policies": 8500,
+        "total_premium_volume": 15750000.50
     },
-    "journey_timing": {
-        "avg_days_user_to_client": 3.2,
-        "avg_days_client_to_policy": 15.7
-    },
-    "customer_segments": {
+    "demographic_analysis": {
         "by_state": {
             "LIMA": {"total_users": 5000, "with_policies": 3200, "conversion_rate": 64.0}
         }
     }
-}
-```
-
-## API Endpoints
-
-### 1. Claims Statistics
-**GET** `/claims/stats`
-
-- **Description**: Returns statistical analysis of insurance claims grouped by status
-- **Data Source**: `cassandra/reclamos/reclamos.csv`
-- **Response**: JSON object with claim status counts
-
-**Example Response:**
-```json
-{
-  "aprobado": 150,
-  "pendiente": 75,
-  "rechazado": 25,
-  "en_revision": 50
-}
-```
-
-### 2. Payment Averages
-**GET** `/payments/avg`
-
-- **Description**: Calculates the average payment amount from payment data
-- **Data Source**: `cassandra/pagos/pagos.csv`
-- **Response**: JSON object with average payment amount
-
-**Example Response:**
-```json
-{
-  "avg_monto": 1250.75
-}
-```
-
-### 3. Top Audit Services
-**GET** `/audits/top-services`
-
-- **Description**: Returns the top 5 most frequently used services from transaction audits
-- **Data Source**: `cassandra/transaction_audit/transaction_audit.csv`
-- **Response**: JSON object with service names and their usage counts
-
-**Example Response:**
-```json
-{
-  "payment_service": 342,
-  "user_authentication": 298,
-  "data_backup": 187,
-  "notification_service": 156,
-  "report_generation": 134
 }
 ```
 
@@ -311,21 +201,48 @@ This FastAPI-based API provides advanced data analysis endpoints for processing 
 The API requires the following environment variables for AWS S3 integration:
 
 | Variable | Description | Default Value |
-|----------|-------------|--------------|
+|----------|-------------|---------------|
 | `AWS_ACCESS_KEY_ID` | AWS Access Key ID | Required |
 | `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key | Required |
 | `AWS_SESSION_TOKEN` | AWS Session Token (if using temporary credentials) | Optional |
 | `AWS_DEFAULT_REGION` | AWS Region | `us-east-1` |
-| `S3_BUCKET` | S3 Bucket name containing the data | `bucket's-name` |
+| `S3_BUCKET` | S3 Bucket name containing the data | `bucket-name` |
 
-## Installation & Setup
+## Database Management
+
+### Unified Orchestrator
+
+The project includes an improved orchestration script that manages MySQL, PostgreSQL, and Cassandra
+
+```bash
+# Start all databases + setup + seed
+python orchestrator.py all
+
+# Start individual databases
+python orchestrator.py mysql
+python orchestrator.py postgresql  
+python orchestrator.py cassandra
+
+# Start database + configure schema
+python orchestrator.py mysql+setup
+python orchestrator.py postgresql+setup
+python orchestrator.py cassandra+setup
+
+# Only fake data (requires DBs already configured)
+python orchestrator.py faker
+```
+
+### Database Project
+
+
+## API Installation and Setup
 
 ### Prerequisites
 
 - Python 3.11+
-- Docker (optional)
+- Docker and Docker Compose
 - AWS credentials with S3 access
-- Access to the S3 bucket containing the CSV data files
+- S3 bucket configured with CSV data
 
 ### Local Development Setup
 
@@ -350,7 +267,7 @@ The API requires the following environment variables for AWS S3 integration:
    export AWS_ACCESS_KEY_ID="your_access_key"
    export AWS_SECRET_ACCESS_KEY="your_secret_key"
    export AWS_DEFAULT_REGION="us-east-1"
-   export S3_BUCKET="bucket's-name"
+   export S3_BUCKET="bucket-name"
    ```
 
 5. **Run the application:**
@@ -371,7 +288,7 @@ The API requires the following environment variables for AWS S3 integration:
      -e AWS_ACCESS_KEY_ID="your_access_key" \
      -e AWS_SECRET_ACCESS_KEY="your_secret_key" \
      -e AWS_DEFAULT_REGION="us-east-1" \
-     -e S3_BUCKET="bucket's-name" \
+     -e S3_BUCKET="bucket-name" \
      API-Analytic-Primac
    ```
 
@@ -384,7 +301,7 @@ From the project root directory:
    AWS_ACCESS_KEY_ID=your_access_key
    AWS_SECRET_ACCESS_KEY=your_secret_key
    AWS_DEFAULT_REGION=us-east-1
-   S3_BUCKET=bucket's-name
+   S3_BUCKET=bucket-name
    ```
 
 2. **Start the service:**
@@ -394,37 +311,79 @@ From the project root directory:
 
 ## Usage Examples
 
-### Using curl
+### 📊 MySQL Analytics (2 endpoints)
 
 ```bash
-# Get claims statistics
-curl http://localhost:8000/claims/stats
+# [GENERAL] User analysis
+curl "http://localhost:8000/mysql/analytics/users"
 
-# Get payment averages
-curl http://localhost:8000/payments/avg
-
-# Get top audit services
-curl http://localhost:8000/audits/top-services
+# [SPECIFIC] Growth by state (6 months)
+curl "http://localhost:8000/mysql/analytics/growth-by-state?months=6"
 ```
 
-### Using Python requests
+### 📄 PostgreSQL Analytics (2 endpoints)
+
+```bash
+# [GENERAL] Product analysis
+curl "http://localhost:8000/postgresql/analytics/products"
+
+# [SPECIFIC] Product profitability
+curl "http://localhost:8000/postgresql/analytics/product-profitability"
+```
+
+### 💰 Cassandra Analytics (2 endpoints)
+
+```bash
+# [GENERAL] Claims analysis
+curl "http://localhost:8000/cassandra/analytics/claims"
+
+# [SPECIFIC] Claims-payments correlation
+curl "http://localhost:8000/cassandra/analytics/claims-payments-correlation"
+```
+
+### 🔗 Cross-System Analytics (3 key endpoints)
+
+```bash
+# [CROSS 1] Customer-policy profile
+curl "http://localhost:8000/cross/analytics/customer-policy-profile"
+
+# [CROSS 2] Agent performance
+curl "http://localhost:8000/cross/analytics/agent-performance"
+
+# [CROSS 3] Claims analysis (claims vs policies)
+curl "http://localhost:8000/cross/analytics/claims-vs-policies"
+```
+
+### 🐍 Using Python
 
 ```python
 import requests
+import json
 
 base_url = "http://localhost:8000"
 
-# Get claims statistics
-response = requests.get(f"{base_url}/claims/stats")
-print(response.json())
+# [CROSS 1] Complete customer-policy profile
+response = requests.get(f"{base_url}/cross/analytics/customer-policy-profile")
+profile_data = response.json()
 
-# Get payment averages
-response = requests.get(f"{base_url}/payments/avg")
-print(response.json())
+print(f"Penetration rate: {profile_data['summary']['penetration_rate']}%")
+print(f"Total customers: {profile_data['summary']['total_customers']}")
+print(f"Customers with policies: {profile_data['summary']['customers_with_policies']}")
 
-# Get top audit services
-response = requests.get(f"{base_url}/audits/top-services")
-print(response.json())
+# [SPECIFIC] Product profitability
+response = requests.get(f"{base_url}/postgresql/analytics/product-profitability")
+profitability = response.json()
+
+print("\nTop products by volume:")
+for product in profitability['top_products_by_volume'][:3]:
+    print(f"- {product['name']}: {product['policy_number_count']} policies")
+
+# [GENERAL] MySQL user statistics
+response = requests.get(f"{base_url}/mysql/analytics/users")
+users_data = response.json()
+
+print(f"\nTotal users: {users_data['total_users']}")
+print(f"Recent registrations: {users_data['recent_registrations']}")
 ```
 
 ## 📚 Interactive Documentation
@@ -455,7 +414,7 @@ Detail: Error: Could not load mysql/users/users.csv: NoSuchKey
 **Solution:**
 - Verify bucket name and region in `S3_BUCKET` and `AWS_DEFAULT_REGION`
 - Check that CSV files exist in expected S3 paths
-- Use `/data/info` to see dataset availability
+- Use `/health` to see dataset availability
 
 #### Data Processing Error
 ```
@@ -467,7 +426,7 @@ Detail: Error analyzing users: 'estado' column not found
 - Review expected structure in "Key Fields per Dataset" section
 
 #### Error 422 - Validation Error
-```
+```json
 {
     "detail": [
         {
@@ -481,7 +440,6 @@ Detail: Error analyzing users: 'estado' column not found
 **Solution:**
 - Verify parameters are in correct format
 - `months` must be between 1 and 36
-- `hours` must be between 24 and 720
 
 ### Diagnostic Commands
 
@@ -489,50 +447,11 @@ Detail: Error analyzing users: 'estado' column not found
 # Check general status
 curl http://localhost:8000/health
 
-# List available datasets
-curl http://localhost:8000/data/info
-
 # Test a simple endpoint
-curl http://localhost:8000/claims/stats
+curl http://localhost:8000/mysql/analytics/users
 
 # Check container logs
 docker logs <container_name>
-```
-
-## Database Management
-
-### Unified Orchestrator
-
-The project includes an improved orchestration script that manages MySQL, PostgreSQL, and Cassandra:
-
-**Location:** `../../databases/Primac-Claims-Payments-DB/orchestrator.py`
-
-```bash
-# Start all databases + setup + seed
-python orchestrator.py all
-
-# Start individual databases
-python orchestrator.py mysql
-python orchestrator.py postgresql  
-python orchestrator.py cassandra
-
-# Start database + configure schema
-python orchestrator.py mysql+setup
-python orchestrator.py postgresql+setup
-python orchestrator.py cassandra+setup
-
-# Only fake data (requires DBs already configured)
-python orchestrator.py faker
-```
-
-### Database Project Structure
-
-```
-databases/
-├── BD_Users_Primac/           # MySQL - Users and Clients
-├── proyecto_postgresql/       # PostgreSQL - Products and Policies
-└── Primac-Claims-Payments-DB/ # Cassandra - Payments and Claims
-    └── orchestrator.py        # Unified orchestration script
 ```
 
 ## S3 Data Structure
@@ -540,7 +459,7 @@ databases/
 ### S3 Bucket Organization
 
 ```
-s3://ingesta-de-datos/
+s3://bucket-name/
 ├── mysql/
 │   ├── users/
 │   │   └── users.csv
@@ -589,13 +508,6 @@ s3://ingesta-de-datos/
 
 ## Deployment
 
-### Production Considerations
-
-1. **Security**: Use IAM roles instead of hardcoded credentials
-2. **Monitoring**: Implement logging and monitoring
-3. **Scaling**: Consider using AWS ECS, EKS, or similar container orchestration
-4. **Load Balancing**: Use Application Load Balancer for multiple instances
-
 ### AWS ECS Deployment Example
 
 ```bash
@@ -604,85 +516,6 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 docker build -t API-Analytic-Primac .
 docker tag API-Analytic-Primac:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
 docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:latest
-```
-
-## Usage Examples
-
-### 📊 MySQL Analytics
-
-```bash
-# User analysis
-curl "http://localhost:8000/mysql/analytics/users"
-
-# Client demographics
-curl "http://localhost:8000/mysql/analytics/clients/demographics"
-
-# Growth by state (6 months)
-curl "http://localhost:8000/mysql/analytics/growth-by-state?months=6"
-```
-
-### 📄 PostgreSQL Analytics
-
-```bash
-# Product analysis
-curl "http://localhost:8000/postgresql/analytics/products"
-
-# Product profitability
-curl "http://localhost:8000/postgresql/analytics/product-profitability"
-
-# Policy trends (3 months)
-curl "http://localhost:8000/postgresql/analytics/policy-trends?months=3"
-```
-
-### 💰 Cassandra Analytics
-
-```bash
-# Claims analysis
-curl "http://localhost:8000/cassandra/analytics/claims"
-
-# Claims-payments correlation
-curl "http://localhost:8000/cassandra/analytics/claims-payments-correlation"
-
-# Activity patterns (72 hours)
-curl "http://localhost:8000/cassandra/analytics/activity-patterns?hours=72"
-```
-
-### 🔗 Cross-System Analytics
-
-```bash
-# Complete customer journey
-curl "http://localhost:8000/cross/analytics/customer-journey"
-
-# Agent performance
-curl "http://localhost:8000/cross/analytics/agent-performance"
-
-# Claims vs policies analysis
-curl "http://localhost:8000/cross/analytics/claims-vs-policies"
-```
-
-### 🐍 Using Python
-
-```python
-import requests
-import json
-
-base_url = "http://localhost:8000"
-
-# Complete customer journey analysis
-response = requests.get(f"{base_url}/cross/analytics/customer-journey")
-journey_data = response.json()
-
-print(f"Overall conversion: {journey_data['conversion_funnel']['conversion_rates']['overall_conversion']}%")
-print(f"Total users: {journey_data['conversion_funnel']['total_users']}")
-print(f"Clients with policies: {journey_data['conversion_funnel']['clients_to_policyholders']}")
-
-# Product profitability analysis
-response = requests.get(f"{base_url}/postgresql/analytics/product-profitability")
-profitability = response.json()
-
-print("\nTop products by volume:")
-for product in profitability['top_products_by_volume'][:3]:
-    print(f"- {product['name']}: {product['policy_number_count']} policies")
 ```
 
 ## Main Dependencies
@@ -701,6 +534,49 @@ for product in profitability['top_products_by_volume'][:3]:
 - **postgresql_s3_analytics**: PostgreSQL data analysis from S3
 - **cassandra_s3_analytics**: Cassandra data analysis from S3
 - **cross_microservice_analytics**: Cross-system analytics
+
+## Problem Solving
+
+### Common Issues
+
+1. **AWS Credentials Error**
+   - Ensure AWS credentials are properly configured
+   - Check IAM permissions for S3 access
+
+2. **S3 Access Error**
+   - Verify bucket name and region
+   - Check if CSV files exist in expected S3 paths
+
+3. **Data Processing Error**
+   - Verify CSV file format and column names
+   - Check for empty or corrupted files
+
+### Status Verification
+
+Add a status verification endpoint by visiting: `http://localhost:8000/docs`
+
+## Useful Commands
+
+### Local Development
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run in development mode
+uvicorn main:app --reload
+
+# Run tests (if they exist)
+pytest
+
+# Format code
+black main.py
+
+# Check linting
+flake8 main.py
+```
 
 ## Available Analysis Types
 
@@ -727,42 +603,37 @@ for product in profitability['top_products_by_volume'][:3]:
 
 ---
 
-**API Version:** 3.0.0  
-**Last Update:** October 2024  
+**API Version:** 2.0.0
+**Last Update:** October 2024 
 **Status:** Functional and optimized for S3 analytics
+**Total Endpoints:** 11 (2 health + 6 microservice + 3 cross-analytics)
 
-## Troubleshooting
+### Docker
+```bash
+# Build image
+docker build -t API-Analytic-Primac .
 
-### Common Issues
+# Run container
+docker run -p 8000:8000 API-Analytic-Primac
 
-1. **AWS Credentials Error**
-   - Ensure AWS credentials are properly set
-   - Check IAM permissions for S3 access
+# View container logs
+docker logs <container_id>
 
-2. **S3 Access Error**
-   - Verify bucket name and region
-   - Check if CSV files exist in the expected S3 paths
+# Access container
+docker exec -it <container_id> /bin/bash
+```
 
-3. **Data Processing Error**
-   - Verify CSV file format and column names
-   - Check for empty or corrupted files
+### AWS CLI
+```bash
+# Configure credentials
+aws configure
 
-### Health Check
+# List objects in S3
+aws s3 ls s3://bucket-name/
 
-Add a health check endpoint by visiting: `http://localhost:8000/docs`
+# Download file from S3
+aws s3 cp s3://bucket-name/cassandra/reclamos/reclamos.csv ./
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the terms specified in the LICENSE file.
-
-## Support
-
-For support and questions, please contact the development team or create an issue in the project repository.
+# Verify bucket permissions
+aws s3api get-bucket-policy --bucket bucket-name
+```

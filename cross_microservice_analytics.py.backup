@@ -8,14 +8,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class CrossMicroserviceAnalytics:
-    """Análisis cruzado entre microservicios usando datos de S3 - Versión Simplificada"""
+    """Análisis cruzado entre microservicios usando datos de S3"""
     
     def __init__(self):
         self.s3_manager = s3_manager
     
     def get_customer_policy_profile(self) -> Dict[str, Any]:
         """
-        [CROSS 1] JOIN entre MySQL (usuarios/clientes) y PostgreSQL (pólizas)
+        JOIN entre MySQL (usuarios/clientes) y PostgreSQL (pólizas)
         Análisis del perfil de clientes y sus pólizas
         """
         try:
@@ -28,14 +28,12 @@ class CrossMicroserviceAnalytics:
             if 'id' in users_df.columns and 'user_id' in clients_df.columns:
                 user_client_df = pd.merge(users_df, clients_df, left_on='id', right_on='user_id', how='inner', suffixes=('_user', '_client'))
             else:
-                return {"error": "Cannot join users and clients - missing key columns"}
-            
+                return {"error": "Cannot join users and clients - missing key columns"}\n            
             # JOIN con pólizas usando customer_id
             if 'user_id' in user_client_df.columns and 'customer_id' in policies_df.columns:
                 full_profile = pd.merge(user_client_df, policies_df, left_on='user_id', right_on='customer_id', how='left', suffixes=('', '_policy'))
             else:
-                return {"error": "Cannot join clients with policies - missing customer_id"}
-            
+                return {"error": "Cannot join clients with policies - missing customer_id"}\n            
             # Análisis del perfil completo
             total_customers = len(user_client_df)
             customers_with_policies = len(full_profile[full_profile['policy_number'].notna()])
@@ -72,6 +70,16 @@ class CrossMicroserviceAnalytics:
                 
                 age_policy_analysis.columns = ['_'.join(col).strip() for col in age_policy_analysis.columns.values]
                 demographic_analysis['by_age_group'] = {str(k): v for k, v in age_policy_analysis.to_dict('index').items()}
+            
+            # Por rol de usuario y pólizas
+            if 'role' in full_profile.columns:
+                role_policy_analysis = full_profile.groupby('role').agg({
+                    'policy_number': ['count', 'nunique'],
+                    'premium': ['sum', 'mean']
+                }).round(2)
+                
+                role_policy_analysis.columns = ['_'.join(col).strip() for col in role_policy_analysis.columns.values]
+                demographic_analysis['by_role'] = role_policy_analysis.to_dict('index')
             
             # Análisis de valor de cliente
             customer_value = {}
@@ -112,7 +120,7 @@ class CrossMicroserviceAnalytics:
     
     def get_agent_performance_across_systems(self) -> Dict[str, Any]:
         """
-        [CROSS 2] JOIN entre MySQL (agentes) y PostgreSQL (pólizas) para analizar rendimiento de agentes
+        JOIN entre MySQL (agentes) y PostgreSQL (pólizas) para analizar rendimiento de agentes
         """
         try:
             # Cargar datos
@@ -165,6 +173,30 @@ class CrossMicroserviceAnalytics:
                 top_agents_by_premium = []
                 top_diversified_agents = []
             
+            # Análisis comparativo activos vs inactivos
+            active_vs_inactive = full_agent_data.groupby('is_active').agg({
+                'policy_number': 'count',
+                'premium': ['sum', 'mean'],
+                'code_agent': 'nunique'
+            }).round(2)
+            
+            active_vs_inactive.columns = ['_'.join(col).strip() for col in active_vs_inactive.columns.values]
+            
+            # Análisis temporal de agentes (si hay fecha de creación de pólizas)
+            temporal_analysis = {}
+            if 'created_at' in full_agent_data.columns:
+                full_agent_data['created_at'] = pd.to_datetime(full_agent_data['created_at'])
+                full_agent_data['month_year'] = full_agent_data['created_at'].dt.to_period('M')
+                
+                # Agentes más activos por mes
+                monthly_agent_activity = full_agent_data.groupby(['month_year', 'code_agent']).size().reset_index(name='policies_sold')
+                top_monthly_performers = monthly_agent_activity.groupby('month_year')['policies_sold'].max()
+                
+                temporal_analysis = {
+                    "monthly_peak_performance": {str(k): v for k, v in top_monthly_performers.tail(6).items()},
+                    "most_consistent_agents": monthly_agent_activity.groupby('code_agent')['policies_sold'].std().nsmallest(5).to_dict()
+                }
+            
             # Resumen ejecutivo
             total_agents = len(agents_df)
             active_agents_count = len(agents_df[agents_df['is_active'] == True]) if 'is_active' in agents_df.columns else total_agents
@@ -187,6 +219,8 @@ class CrossMicroserviceAnalytics:
                     "by_premium": top_agents_by_premium,
                     "by_diversification": top_diversified_agents
                 },
+                "active_vs_inactive_comparison": active_vs_inactive.to_dict('index'),
+                "temporal_analysis": temporal_analysis,
                 "data_sources": {
                     "mysql_tables": ["agents"],
                     "postgresql_tables": ["policies", "products"],
@@ -200,7 +234,7 @@ class CrossMicroserviceAnalytics:
     
     def get_claims_vs_policies_analysis(self) -> Dict[str, Any]:
         """
-        [CROSS 3] JOIN entre PostgreSQL (pólizas) y Cassandra (reclamos) para análisis de siniestralidad
+        JOIN entre PostgreSQL (pólizas) y Cassandra (reclamos) para análisis de siniestralidad
         """
         try:
             # Cargar datos
@@ -215,6 +249,7 @@ class CrossMicroserviceAnalytics:
                 policies_with_products = policies_df
             
             # JOIN pólizas con reclamos (asumiendo que hay un campo policy_id en reclamos)
+            # Nota: Ajustar según la estructura real de los datos de Cassandra
             if 'id' in policies_df.columns:
                 # Si hay policy_id en claims
                 if 'policy_id' in claims_df.columns:
@@ -245,7 +280,24 @@ class CrossMicroserviceAnalytics:
                 }).round(2)
                 
                 product_claims.columns = ['_'.join(col).strip() for col in product_claims.columns.values]
+                
+                # Calcular tasa de siniestralidad por producto
+                if 'estado_<lambda>' in product_claims.columns:
+                    product_claims['claim_rate'] = (product_claims['estado_<lambda>'] / product_claims['policy_number_policy_count'] * 100).round(2)
+                
                 product_analysis = product_claims.to_dict('index')
+            
+            # Análisis temporal de reclamos vs pólizas
+            temporal_analysis = {}
+            if 'created_at' in claims_policies.columns and 'fecha_reclamo' in claims_policies.columns:
+                claims_policies['created_at'] = pd.to_datetime(claims_policies['created_at'])
+                claims_policies['fecha_reclamo'] = pd.to_datetime(claims_policies['fecha_reclamo'])
+                
+                # Tiempo promedio entre póliza y reclamo
+                claims_policies['days_to_claim'] = (claims_policies['fecha_reclamo'] - claims_policies['created_at']).dt.days
+                
+                avg_days_to_claim = claims_policies['days_to_claim'].mean()
+                temporal_analysis['avg_days_policy_to_claim'] = round(avg_days_to_claim, 1) if pd.notna(avg_days_to_claim) else 0
             
             # Análisis de montos si están disponibles
             financial_analysis = {}
@@ -268,6 +320,7 @@ class CrossMicroserviceAnalytics:
                     "total_claims": len(claims_df)
                 },
                 "product_analysis": product_analysis,
+                "temporal_analysis": temporal_analysis,
                 "financial_analysis": financial_analysis,
                 "data_sources": {
                     "postgresql_tables": ["policies", "products"],
@@ -325,6 +378,131 @@ class CrossMicroserviceAnalytics:
                 "join_approach": "separate analysis"
             }
         }
+    
+    def get_complete_customer_journey(self) -> Dict[str, Any]:
+        """
+        Análisis completo del customer journey combinando las 3 bases de datos
+        """
+        try:
+            # Cargar todos los datos
+            users_df = self.s3_manager.get_mysql_data('users')
+            clients_df = self.s3_manager.get_mysql_data('clients')
+            policies_df = self.s3_manager.get_postgresql_data('policies')
+            claims_df = self.s3_manager.get_cassandra_data('reclamos')
+            payments_df = self.s3_manager.get_cassandra_data('pagos')
+            
+            # Construir el journey completo
+            # Paso 1: Usuario -> Cliente
+            if 'id' in users_df.columns and 'user_id' in clients_df.columns:
+                user_client = pd.merge(users_df, clients_df, left_on='id', right_on='user_id', how='inner', suffixes=('_user', '_client'))
+            else:
+                return {"error": "Cannot link users with clients"}
+            
+            # Paso 2: Cliente -> Pólizas
+            if 'user_id' in user_client.columns and 'customer_id' in policies_df.columns:
+                customer_policies = pd.merge(user_client, policies_df, left_on='user_id', right_on='customer_id', how='left', suffixes=('', '_policy'))
+            else:
+                customer_policies = user_client
+            
+            # Estadísticas del journey
+            total_users = len(users_df)
+            users_became_clients = len(user_client)
+            clients_with_policies = len(customer_policies[customer_policies['policy_number'].notna()]) if 'policy_number' in customer_policies.columns else 0
+            
+            # Funnel de conversión
+            conversion_funnel = {
+                "total_users": total_users,
+                "users_to_clients": users_became_clients,
+                "clients_to_policyholders": clients_with_policies,
+                "conversion_rates": {
+                    "user_to_client": round((users_became_clients / total_users) * 100, 2) if total_users > 0 else 0,
+                    "client_to_policy": round((clients_with_policies / users_became_clients) * 100, 2) if users_became_clients > 0 else 0,
+                    "overall_conversion": round((clients_with_policies / total_users) * 100, 2) if total_users > 0 else 0
+                }
+            }
+            
+            # Análisis de tiempo del journey
+            journey_timing = {}
+            if 'created_at_user' in customer_policies.columns and 'created_at_client' in customer_policies.columns:
+                customer_policies['created_at_user'] = pd.to_datetime(customer_policies['created_at_user'])
+                customer_policies['created_at_client'] = pd.to_datetime(customer_policies['created_at_client'])
+                
+                customer_policies['days_user_to_client'] = (customer_policies['created_at_client'] - customer_policies['created_at_user']).dt.days
+                avg_user_to_client = customer_policies['days_user_to_client'].mean()
+                
+                journey_timing['avg_days_user_to_client'] = round(avg_user_to_client, 1) if pd.notna(avg_user_to_client) else 0
+            
+            if 'created_at_client' in customer_policies.columns and 'created_at' in customer_policies.columns:
+                customer_policies['created_at'] = pd.to_datetime(customer_policies['created_at'])
+                customer_policies['days_client_to_policy'] = (customer_policies['created_at'] - customer_policies['created_at_client']).dt.days
+                avg_client_to_policy = customer_policies[customer_policies['policy_number'].notna()]['days_client_to_policy'].mean()
+                
+                journey_timing['avg_days_client_to_policy'] = round(avg_client_to_policy, 1) if pd.notna(avg_client_to_policy) else 0
+            
+            # Segmentación de clientes por journey
+            customer_segments = {}
+            
+            # Por estado geográfico
+            if 'state' in customer_policies.columns:
+                state_journey = customer_policies.groupby('state').agg({
+                    'id': 'count',  # Total usuarios por estado
+                    'policy_number': lambda x: x.notna().sum()  # Con pólizas
+                }).rename(columns={'id': 'total_users', 'policy_number': 'with_policies'})
+                
+                state_journey['conversion_rate'] = (state_journey['with_policies'] / state_journey['total_users'] * 100).round(2)
+                customer_segments['by_state'] = state_journey.to_dict('index')
+            
+            # Por edad
+            if 'birth_date' in customer_policies.columns:
+                customer_policies['birth_date'] = pd.to_datetime(customer_policies['birth_date'])
+                customer_policies['age'] = (datetime.now() - customer_policies['birth_date']).dt.days // 365
+                
+                bins = [0, 25, 35, 45, 55, 65, 100]
+                labels = ['<25', '25-34', '35-44', '45-54', '55-64', '65+']
+                customer_policies['age_group'] = pd.cut(customer_policies['age'], bins=bins, labels=labels, include_lowest=True)
+                
+                age_journey = customer_policies.groupby('age_group').agg({
+                    'id': 'count',
+                    'policy_number': lambda x: x.notna().sum()
+                }).rename(columns={'id': 'total_users', 'policy_number': 'with_policies'})
+                
+                age_journey['conversion_rate'] = (age_journey['with_policies'] / age_journey['total_users'] * 100).round(2)
+                customer_segments['by_age_group'] = {str(k): v for k, v in age_journey.to_dict('index').items()}
+            
+            # Análisis de valor a lo largo del journey
+            value_analysis = {}
+            if 'premium' in customer_policies.columns:
+                customers_with_value = customer_policies[customer_policies['premium'].notna()]
+                
+                if len(customers_with_value) > 0:
+                    value_analysis = {
+                        "total_customer_value": round(customers_with_value['premium'].sum(), 2),
+                        "avg_customer_value": round(customers_with_value['premium'].mean(), 2),
+                        "high_value_customers": len(customers_with_value[customers_with_value['premium'] > customers_with_value['premium'].quantile(0.8)]),
+                        "customer_ltv_segments": {
+                            "high": len(customers_with_value[customers_with_value['premium'] > customers_with_value['premium'].quantile(0.8)]),
+                            "medium": len(customers_with_value[(customers_with_value['premium'] > customers_with_value['premium'].quantile(0.4)) & 
+                                                           (customers_with_value['premium'] <= customers_with_value['premium'].quantile(0.8))]),
+                            "low": len(customers_with_value[customers_with_value['premium'] <= customers_with_value['premium'].quantile(0.4)])
+                        }
+                    }
+            
+            return {
+                "conversion_funnel": conversion_funnel,
+                "journey_timing": journey_timing,
+                "customer_segments": customer_segments,
+                "value_analysis": value_analysis,
+                "data_integration": {
+                    "mysql_tables": ["users", "clients"],
+                    "postgresql_tables": ["policies"],
+                    "cassandra_tables": ["reclamos", "pagos"],
+                    "successful_joins": ["users->clients", "clients->policies"]
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in complete customer journey analysis: {e}")
+            raise Exception(f"Error analyzing customer journey: {str(e)}")
 
 # Instancia global
 cross_analytics = CrossMicroserviceAnalytics()

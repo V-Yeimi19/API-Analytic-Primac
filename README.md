@@ -2,24 +2,24 @@
 
 ## Resumen General
 
-Esta API basada en FastAPI proporciona endpoints avanzados de análisis de datos para procesar y analizar datos empresariales almacenados en AWS S3. La API se especializa en procesar datos de la empresa Primac de múltiples fuentes de bases de datos (MySQL, PostgreSQL y Cassandra) que han sido ingeridas y almacenadas en S3 para análisis unificado.
+Esta API basada en FastAPI proporciona endpoints esenciales de análisis de datos para procesar y analizar datos empresariales almacenados en AWS S3. La API se especializa en procesar datos de la empresa Primac de múltiples fuentes de bases de datos (MySQL, PostgreSQL y Cassandra) que han sido ingeridas y almacenadas en S3 para análisis unificado.
 
 ## Características Principales
 
 ### 📊 Análisis Multi-Base de Datos
-- **MySQL Analytics**: Análisis de usuarios, clientes, agentes y beneficiarios
-- **PostgreSQL Analytics**: Análisis de productos, pólizas y coberturas
-- **Cassandra Analytics**: Análisis de reclamos, pagos y auditoría de transacciones
+- **MySQL Analytics**: 2 consultas - Estadísticas de usuarios + Crecimiento por estado
+- **PostgreSQL Analytics**: 2 consultas - Análisis de productos + Rentabilidad por producto
+- **Cassandra Analytics**: 2 consultas - Análisis de reclamos + Correlación reclamos-pagos
 
-### 🔗 Análisis Cruzados
-- **Customer Journey**: Análisis completo del recorrido del cliente entre sistemas
-- **Agent Performance**: Rendimiento de agentes combinando datos de varias fuentes
-- **Claims vs Policies**: Análisis de siniestralidad cruzando pólizas y reclamos
+### 🔗 Análisis Cruzados (3 Consultas Clave)
+- **Customer Policy Profile**: Perfil de clientes y sus pólizas (MySQL + PostgreSQL)
+- **Agent Performance**: Rendimiento de agentes cruzando sistemas (MySQL + PostgreSQL)
+- **Claims vs Policies**: Análisis de siniestralidad (PostgreSQL + Cassandra)
 
 ### 🎨 Características Técnicas
 - **Alto Rendimiento**: Construida con FastAPI para rendimiento óptimo
 - **Integración S3**: Procesamiento directo desde AWS S3 sin conexiones directas a BD
-- **Queries Especializadas**: Consultas avanzadas con parámetros personalizables
+- **Arquitectura Limpia**: Código mantenible
 - **Contenerizada**: Contenedor Docker listo para despliegue
 - **Documentación Interactiva**: Swagger UI y ReDoc incluidos
 
@@ -44,8 +44,8 @@ Esta API basada en FastAPI proporciona endpoints avanzados de análisis de datos
 
 ## Documentación Completa de Endpoints
 
-**Base URL**: `http://localhost:8000`  
-**Versión**: `3.0.0` (S3 Analytics Optimizada)
+**Base URL**: `http://localhost:8000`
+**Versión**: `2.0.0`
 
 ### 🟢 Health Check
 
@@ -55,7 +55,7 @@ Esta API basada en FastAPI proporciona endpoints avanzados de análisis de datos
 ```json
 {
     "message": "API Analytics - Primac S3",
-    "version": "3.0.0",
+    "version": "2.0.0",
     "status": "OK",
     "data_source": "S3 Bucket",
     "available_databases": ["MySQL", "PostgreSQL", "Cassandra"]
@@ -100,82 +100,43 @@ Esta API basada en FastAPI proporciona endpoints avanzados de análisis de datos
 }
 ```
 
-### 📊 MySQL Analytics (Usuarios y Clientes)
+## 🎯 ENDPOINTS (11 Total)
 
-**Endpoints Generales:**
-- **GET** `/mysql/analytics/users` - Estadísticas completas de usuarios
-- **GET** `/mysql/analytics/clients/demographics` - Análisis demográfico de clientes
-- **GET** `/mysql/analytics/agents/performance` - Rendimiento de agentes
-- **GET** `/mysql/analytics/beneficiaries/relationships` - Relaciones de beneficiarios
+### 📊 MySQL Analytics (2 endpoints)
 
-**Queries Especializadas:**
-- **GET** `/mysql/analytics/growth-by-state?months=12` - Crecimiento por estado
-- **GET** `/mysql/analytics/data-quality-report` - Reporte de calidad de datos
+**1. [GENERAL] Estadísticas de Usuarios:**
+- **GET** `/mysql/analytics/users` - Análisis completo de usuarios, roles, estados y calidad de datos
 
-### 📄 PostgreSQL Analytics (Productos y Pólizas)
+**2. [ESPECÍFICA] Crecimiento por Estado:**
+- **GET** `/mysql/analytics/growth-by-state?months=12` - Crecimiento de usuarios por estado en N meses
 
-**Endpoints Generales:**
-- **GET** `/postgresql/analytics/products` - Análisis completo de productos
-- **GET** `/postgresql/analytics/policies` - Análisis detallado de pólizas
-- **GET** `/postgresql/analytics/coverages` - Análisis de coberturas
+### 📄 PostgreSQL Analytics (2 endpoints)
 
-**Queries Especializadas:**
-- **GET** `/postgresql/analytics/product-profitability` - Rentabilidad por producto
-- **GET** `/postgresql/analytics/policy-trends?months=12` - Tendencias temporales
+**1. [GENERAL] Análisis de Productos:**
+- **GET** `/postgresql/analytics/products` - Análisis completo de productos, tipos, primas y códigos
 
-### 💰 Cassandra Analytics (Pagos y Reclamos)
+**2. [ESPECÍFICA] Rentabilidad por Producto:**
+- **GET** `/postgresql/analytics/product-profitability` - Análisis de rentabilidad combinando productos y pólizas
 
-**Endpoints Generales:**
-- **GET** `/cassandra/analytics/claims` - Análisis completo de reclamos
-- **GET** `/cassandra/analytics/payments` - Análisis completo de pagos
-- **GET** `/cassandra/analytics/transaction-audit` - Auditoría de transacciones
+### 💰 Cassandra Analytics (2 endpoints)
 
-**Queries Especializadas:**
-- **GET** `/cassandra/analytics/claims-payments-correlation` - Correlación reclamos-pagos
-- **GET** `/cassandra/analytics/activity-patterns?hours=168` - Patrones de actividad
+**1. [GENERAL] Análisis de Reclamos:**
+- **GET** `/cassandra/analytics/claims` - Análisis completo de reclamos, estados, montos y patrones temporales
 
-### 🔗 Cross-Microservice Analytics (Análisis Cruzados)
+**2. [ESPECÍFICA] Correlación Reclamos-Pagos:**
+- **GET** `/cassandra/analytics/claims-payments-correlation` - Correlación entre patrones de reclamos y pagos
 
-- **GET** `/cross/analytics/customer-policy-profile` - Perfil de clientes y pólizas (MySQL + PostgreSQL)
-- **GET** `/cross/analytics/agent-performance` - Rendimiento de agentes (MySQL + PostgreSQL)
-- **GET** `/cross/analytics/claims-vs-policies` - Siniestralidad (PostgreSQL + Cassandra)
-- **GET** `/cross/analytics/customer-journey` - Customer journey completo (MySQL + PostgreSQL + Cassandra)
+### 🔗 Cross-Microservice Analytics (3 endpoints clave)
 
-### 🔄 Legacy Analytics (Compatibilidad)
+**1. [CROSS 1] Perfil Cliente-Póliza:**
+- **GET** `/cross/analytics/customer-policy-profile` - JOIN MySQL + PostgreSQL para perfil completo de clientes
 
-#### GET `/claims/stats`
-**Descripción**: Estadísticas de reclamos desde S3/Cassandra (Legacy)  
-**Response**:
-```json
-{
-    "aprobado": 150,
-    "pendiente": 75,
-    "rechazado": 25,
-    "en_revision": 50
-}
-```
+**2. [CROSS 2] Rendimiento de Agentes:**
+- **GET** `/cross/analytics/agent-performance` - JOIN MySQL + PostgreSQL para rendimiento cross-sistema
 
-#### GET `/payments/avg`
-**Descripción**: Promedio de pagos desde S3/Cassandra (Legacy)  
-**Response**:
-```json
-{
-    "avg_monto": 1250.75
-}
-```
+**3. [CROSS 3] Siniestralidad:**
+- **GET** `/cross/analytics/claims-vs-policies` - JOIN PostgreSQL + Cassandra para análisis de siniestralidad
 
-#### GET `/audits/top-services`
-**Descripción**: Top 5 servicios más utilizados desde auditoría  
-**Response**:
-```json
-{
-    "servicio_pagos": 342,
-    "autenticacion_usuario": 298,
-    "respaldo_datos": 187,
-    "servicio_notificaciones": 156,
-    "generacion_reportes": 134
-}
-```
 
 ## 📝 Formato de Respuestas y Códigos HTTP
 
@@ -273,7 +234,7 @@ La API requiere las siguientes variables de entorno para la integración con AWS
 
 El proyecto incluye un script de orquestación mejorado que gestiona MySQL, PostgreSQL y Cassandra:
 
-**Ubicación:** `../../databases/Primac-Claims-Payments-DB/orchestrator.py`
+**Ubicación:** ``
 
 ```bash
 # Levantar todas las bases de datos + setup + seed
@@ -293,15 +254,7 @@ python orchestrator.py cassandra+setup
 python orchestrator.py faker
 ```
 
-### Estructura de Proyectos de BD
-
-```
-databases/
-├── BD_Users_Primac/           # MySQL - Usuarios y Clientes
-├── proyecto_postgresql/       # PostgreSQL - Productos y Pólizas
-└── Primac-Claims-Payments-DB/ # Cassandra - Pagos y Reclamos
-    └── orchestrator.py        # Script de orquestación unificado
-```
+## Proyecto de Base de Datos
 
 ## Instalación y Configuración de la API
 
@@ -379,55 +332,46 @@ Desde el directorio raíz del proyecto:
 
 ## Ejemplos de Uso
 
-### 📊 Analíticas de MySQL
+### 📊 Analíticas de MySQL (2 endpoints)
 
 ```bash
-# Análisis de usuarios
+# [GENERAL] Análisis de usuarios
 curl "http://localhost:8000/mysql/analytics/users"
 
-# Demografía de clientes
-curl "http://localhost:8000/mysql/analytics/clients/demographics"
-
-# Crecimiento por estado (6 meses)
+# [ESPECÍFICA] Crecimiento por estado (6 meses)
 curl "http://localhost:8000/mysql/analytics/growth-by-state?months=6"
 ```
 
-### 📄 Analíticas de PostgreSQL
+### 📄 Analíticas de PostgreSQL (2 endpoints)
 
 ```bash
-# Análisis de productos
+# [GENERAL] Análisis de productos
 curl "http://localhost:8000/postgresql/analytics/products"
 
-# Rentabilidad por producto
+# [ESPECÍFICA] Rentabilidad por producto
 curl "http://localhost:8000/postgresql/analytics/product-profitability"
-
-# Tendencias de pólizas (3 meses)
-curl "http://localhost:8000/postgresql/analytics/policy-trends?months=3"
 ```
 
-### 💰 Analíticas de Cassandra
+### 💰 Analíticas de Cassandra (2 endpoints)
 
 ```bash
-# Análisis de reclamos
+# [GENERAL] Análisis de reclamos
 curl "http://localhost:8000/cassandra/analytics/claims"
 
-# Correlación reclamos-pagos
+# [ESPECÍFICA] Correlación reclamos-pagos
 curl "http://localhost:8000/cassandra/analytics/claims-payments-correlation"
-
-# Patrones de actividad (72 horas)
-curl "http://localhost:8000/cassandra/analytics/activity-patterns?hours=72"
 ```
 
-### 🔗 Análisis Cruzados
+### 🔗 Análisis Cruzados (3 endpoints clave)
 
 ```bash
-# Customer journey completo
-curl "http://localhost:8000/cross/analytics/customer-journey"
+# [CROSS 1] Perfil cliente-póliza
+curl "http://localhost:8000/cross/analytics/customer-policy-profile"
 
-# Rendimiento de agentes
+# [CROSS 2] Rendimiento de agentes
 curl "http://localhost:8000/cross/analytics/agent-performance"
 
-# Siniestralidad (claims vs policies)
+# [CROSS 3] Siniestralidad (claims vs policies)
 curl "http://localhost:8000/cross/analytics/claims-vs-policies"
 ```
 
@@ -439,21 +383,28 @@ import json
 
 base_url = "http://localhost:8000"
 
-# Análisis completo de customer journey
-response = requests.get(f"{base_url}/cross/analytics/customer-journey")
-journey_data = response.json()
+# [CROSS 1] Perfil completo cliente-póliza
+response = requests.get(f"{base_url}/cross/analytics/customer-policy-profile")
+profile_data = response.json()
 
-print(f"Conversión general: {journey_data['conversion_funnel']['conversion_rates']['overall_conversion']}%")
-print(f"Usuarios totales: {journey_data['conversion_funnel']['total_users']}")
-print(f"Clientes con pólizas: {journey_data['conversion_funnel']['clients_to_policyholders']}")
+print(f"Tasa de penetración: {profile_data['summary']['penetration_rate']}%")
+print(f"Clientes totales: {profile_data['summary']['total_customers']}")
+print(f"Clientes con pólizas: {profile_data['summary']['customers_with_policies']}")
 
-# Análisis de rentabilidad por producto
+# [ESPECÍFICA] Rentabilidad por producto
 response = requests.get(f"{base_url}/postgresql/analytics/product-profitability")
 profitability = response.json()
 
 print("\nTop productos por volumen:")
 for product in profitability['top_products_by_volume'][:3]:
     print(f"- {product['name']}: {product['policy_number_count']} pólizas")
+
+# [GENERAL] Estadísticas de usuarios MySQL
+response = requests.get(f"{base_url}/mysql/analytics/users")
+users_data = response.json()
+
+print(f"\nUsuarios totales: {users_data['total_users']}")
+print(f"Registros recientes: {users_data['recent_registrations']}")
 ```
 
 ## 📚 Documentación Interactiva
@@ -533,7 +484,7 @@ docker logs <container_name>
 ### Organización del Bucket S3
 
 ```
-s3://ingesta-de-datos/
+s3://nombre-del-bucket/
 ├── mysql/
 │   ├── users/
 │   │   └── users.csv
@@ -629,24 +580,6 @@ docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/API-Analytic-Primac:lat
 
 Añadir un endpoint de verificación de estado visitando: `http://localhost:8000/docs`
 
-## Contribuciones
-
-1. Hacer fork del repositorio
-2. Crear una rama de característica
-3. Hacer tus cambios
-4. Añadir pruebas si es aplicable
-5. Enviar un pull request
-
-## Licencia
-
-Este proyecto está licenciado bajo los términos especificados en el archivo LICENSE.
-
-## Soporte
-
-Para soporte y preguntas, por favor contacta al equipo de desarrollo o crea un issue en el repositorio del proyecto.
-
----
-
 ## Comandos Útiles
 
 ### Desarrollo Local
@@ -695,9 +628,10 @@ flake8 main.py
 
 ---
 
-**Versión de la API:** 3.0.0  
-**Última actualización:** Octubre 2024  
-**Estado:** Funcional y optimizada para análisis S3
+**Versión de la API:** 2.0.0 
+**Última actualización:** Octubre 2024
+**Estado:** Funcional, simplificada y optimizada para análisis S3
+**Endpoints Totales:** 11 (2 health + 6 microservice + 3 cross-analytics)
 
 ### Docker
 ```bash

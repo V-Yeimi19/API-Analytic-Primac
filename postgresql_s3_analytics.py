@@ -8,13 +8,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PostgreSQLAnalytics:
-    """Análisis de datos PostgreSQL desde S3"""
+    """Análisis de datos PostgreSQL desde S3 - Versión Simplificada"""
     
     def __init__(self):
         self.s3_manager = s3_manager
     
     def get_product_analysis(self) -> Dict[str, Any]:
-        """Análisis completo de productos"""
+        """[GENERAL] Análisis completo de productos"""
         try:
             products_df = self.s3_manager.get_postgresql_data('products')
             
@@ -82,150 +82,8 @@ class PostgreSQLAnalytics:
             logger.error(f"Error in product analysis: {e}")
             raise Exception(f"Error analyzing products: {str(e)}")
     
-    def get_policy_insights(self) -> Dict[str, Any]:
-        """Análisis detallado de pólizas"""
-        try:
-            policies_df = self.s3_manager.get_postgresql_data('policies')
-            
-            total_policies = len(policies_df)
-            
-            # Pólizas por estado
-            status_distribution = policies_df['status'].value_counts().to_dict() if 'status' in policies_df.columns else {}
-            
-            # Análisis de sumas aseguradas
-            sum_insured_stats = {}
-            if 'sum_insured' in policies_df.columns:
-                valid_sums = policies_df['sum_insured'].dropna()
-                
-                sum_insured_stats = {
-                    "average_sum_insured": round(valid_sums.mean(), 2),
-                    "median_sum_insured": round(valid_sums.median(), 2),
-                    "total_sum_insured": round(valid_sums.sum(), 2),
-                    "max_sum_insured": round(valid_sums.max(), 2)
-                }
-                
-                # Distribución por rangos
-                percentiles = [0, 25, 50, 75, 90, 100]
-                percentile_values = np.percentile(valid_sums, percentiles)
-                sum_insured_stats["percentiles"] = {
-                    f"p{p}": round(v, 2) for p, v in zip(percentiles, percentile_values)
-                }
-            
-            # Análisis de primas
-            premium_stats = {}
-            if 'premium' in policies_df.columns:
-                valid_premiums = policies_df['premium'].dropna()
-                
-                premium_stats = {
-                    "average_premium": round(valid_premiums.mean(), 2),
-                    "total_premiums": round(valid_premiums.sum(), 2),
-                    "premium_to_sum_ratio": round((valid_premiums.sum() / policies_df['sum_insured'].sum()) * 100, 2) if 'sum_insured' in policies_df.columns else 0
-                }
-            
-            # Análisis temporal
-            temporal_analysis = {}
-            if 'created_at' in policies_df.columns:
-                policies_df['created_at'] = pd.to_datetime(policies_df['created_at'])
-                
-                # Políticas por mes
-                policies_df['month_year'] = policies_df['created_at'].dt.to_period('M')
-                monthly_policies = policies_df['month_year'].value_counts().sort_index().tail(12)
-                temporal_analysis['monthly_policies'] = {str(k): v for k, v in monthly_policies.items()}
-                
-                # Crecimiento reciente
-                recent_date = datetime.now() - timedelta(days=30)
-                recent_policies = len(policies_df[policies_df['created_at'] >= recent_date])
-                temporal_analysis['recent_policies'] = recent_policies
-            
-            # Análisis por producto
-            product_analysis = {}
-            if 'product_id' in policies_df.columns:
-                product_distribution = policies_df['product_id'].value_counts().head(10)
-                product_analysis = {
-                    "top_products": product_distribution.to_dict(),
-                    "unique_products": policies_df['product_id'].nunique()
-                }
-            
-            # Análisis por agente
-            agent_analysis = {}
-            if 'agent_id' in policies_df.columns:
-                agent_performance = policies_df['agent_id'].value_counts().head(10)
-                agent_analysis = {
-                    "top_agents": agent_performance.to_dict(),
-                    "unique_agents": policies_df['agent_id'].nunique(),
-                    "policies_per_agent": round(policies_df['agent_id'].value_counts().mean(), 2)
-                }
-            
-            return {
-                "total_policies": total_policies,
-                "status_distribution": status_distribution,
-                "sum_insured_statistics": sum_insured_stats,
-                "premium_statistics": premium_stats,
-                "temporal_analysis": temporal_analysis,
-                "product_analysis": product_analysis,
-                "agent_analysis": agent_analysis
-            }
-            
-        except Exception as e:
-            logger.error(f"Error in policy insights: {e}")
-            raise Exception(f"Error analyzing policies: {str(e)}")
-    
-    def get_coverage_analysis(self) -> Dict[str, Any]:
-        """Análisis de coberturas de pólizas"""
-        try:
-            coverage_df = self.s3_manager.get_postgresql_data('policy_coverage')
-            
-            total_coverages = len(coverage_df)
-            
-            # Tipos de cobertura más comunes
-            coverage_types = coverage_df['coverage_name'].value_counts().head(15).to_dict() if 'coverage_name' in coverage_df.columns else {}
-            
-            # Análisis de límites de cobertura
-            limit_stats = {}
-            if 'coverage_limit' in coverage_df.columns:
-                valid_limits = coverage_df['coverage_limit'].dropna()
-                
-                limit_stats = {
-                    "average_limit": round(valid_limits.mean(), 2),
-                    "median_limit": round(valid_limits.median(), 2),
-                    "total_coverage": round(valid_limits.sum(), 2)
-                }
-            
-            # Análisis de deducibles
-            deductible_stats = {}
-            if 'deductible' in coverage_df.columns:
-                valid_deductibles = coverage_df['deductible'].dropna()
-                
-                deductible_stats = {
-                    "average_deductible": round(valid_deductibles.mean(), 2),
-                    "median_deductible": round(valid_deductibles.median(), 2)
-                }
-            
-            # Coberturas por póliza
-            coverages_per_policy = {}
-            if 'policy_id' in coverage_df.columns:
-                policy_coverage_counts = coverage_df['policy_id'].value_counts()
-                coverages_per_policy = {
-                    "avg_coverages_per_policy": round(policy_coverage_counts.mean(), 2),
-                    "max_coverages_per_policy": policy_coverage_counts.max(),
-                    "policies_with_multiple_coverages": len(policy_coverage_counts[policy_coverage_counts > 1])
-                }
-            
-            return {
-                "total_coverages": total_coverages,
-                "coverage_types": coverage_types,
-                "limit_statistics": limit_stats,
-                "deductible_statistics": deductible_stats,
-                "coverages_per_policy": coverages_per_policy
-            }
-            
-        except Exception as e:
-            logger.error(f"Error in coverage analysis: {e}")
-            raise Exception(f"Error analyzing coverages: {str(e)}")
-    
-    # QUERY ESPECÍFICA 1: Análisis de rentabilidad por producto
     def get_product_profitability_analysis(self) -> Dict[str, Any]:
-        """Análisis de rentabilidad por producto combinando productos y pólizas"""
+        """[ESPECÍFICA] Análisis de rentabilidad por producto combinando productos y pólizas"""
         try:
             products_df = self.s3_manager.get_postgresql_data('products')
             policies_df = self.s3_manager.get_postgresql_data('policies')
@@ -283,7 +141,7 @@ class PostgreSQLAnalytics:
                     "top_products_by_volume": top_by_volume,
                     "top_products_by_premium": top_by_premium,
                     "top_products_by_efficiency": top_by_efficiency,
-                    "product_performance_matrix": product_metrics.to_dict('records')[:20]  # Top 20 para evitar respuestas muy grandes
+                    "product_performance_matrix": product_metrics.to_dict('records')[:20]
                 }
             else:
                 return {"error": "Required columns not found for product profitability analysis"}
@@ -291,113 +149,6 @@ class PostgreSQLAnalytics:
         except Exception as e:
             logger.error(f"Error in product profitability analysis: {e}")
             raise Exception(f"Error analyzing product profitability: {str(e)}")
-    
-    # QUERY ESPECÍFICA 2: Análisis temporal de tendencias de pólizas
-    def get_policy_trends_analysis(self, months: int = 12) -> Dict[str, Any]:
-        """Análisis de tendencias temporales de pólizas"""
-        try:
-            policies_df = self.s3_manager.get_postgresql_data('policies')
-            
-            if 'created_at' not in policies_df.columns:
-                return {"error": "created_at column not found"}
-            
-            # Preparar datos temporales
-            policies_df['created_at'] = pd.to_datetime(policies_df['created_at'])
-            cutoff_date = datetime.now() - timedelta(days=30 * months)
-            recent_policies = policies_df[policies_df['created_at'] >= cutoff_date].copy()
-            
-            # Agregar columnas temporales
-            recent_policies['year_month'] = recent_policies['created_at'].dt.to_period('M')
-            recent_policies['quarter'] = recent_policies['created_at'].dt.to_period('Q')
-            recent_policies['day_of_week'] = recent_policies['created_at'].dt.dayofweek
-            recent_policies['hour'] = recent_policies['created_at'].dt.hour
-            
-            # Tendencias mensuales
-            monthly_trends = recent_policies.groupby('year_month').agg({
-                'policy_number': 'count',
-                'premium': ['sum', 'mean'],
-                'sum_insured': ['sum', 'mean'],
-                'status': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else None
-            }).round(2)
-            
-            monthly_trends.columns = ['_'.join(col).strip() for col in monthly_trends.columns.values]
-            monthly_trends_dict = {
-                str(period): row.to_dict() 
-                for period, row in monthly_trends.iterrows()
-            }
-            
-            # Tendencias por día de la semana
-            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            weekly_patterns = recent_policies.groupby('day_of_week')['policy_number'].count()
-            weekly_patterns.index = [day_names[i] for i in weekly_patterns.index]
-            
-            # Tendencias por hora (si hay suficientes datos)
-            hourly_patterns = recent_policies.groupby('hour')['policy_number'].count().to_dict()
-            
-            # Análisis de crecimiento
-            monthly_counts = recent_policies.groupby('year_month').size()
-            growth_analysis = {}
-            
-            if len(monthly_counts) >= 2:
-                # Cálculo de tasa de crecimiento mensual
-                growth_rates = monthly_counts.pct_change().dropna() * 100
-                
-                growth_analysis = {
-                    "average_monthly_growth": round(growth_rates.mean(), 2),
-                    "current_vs_previous": round(growth_rates.iloc[-1], 2) if len(growth_rates) > 0 else 0,
-                    "highest_growth_month": str(growth_rates.idxmax()) if len(growth_rates) > 0 else None,
-                    "lowest_growth_month": str(growth_rates.idxmin()) if len(growth_rates) > 0 else None
-                }
-            
-            # Análisis estacional
-            seasonal_analysis = {}
-            if 'quarter' in recent_policies.columns:
-                quarterly_summary = recent_policies.groupby('quarter').agg({
-                    'policy_number': 'count',
-                    'premium': 'sum'
-                }).round(2)
-                
-                seasonal_analysis = {
-                    str(quarter): {'policies': row['policy_number'], 'premium': row['premium']}
-                    for quarter, row in quarterly_summary.iterrows()
-                }
-            
-            # Análisis por estado de póliza en el tiempo
-            status_trends = {}
-            if 'status' in recent_policies.columns:
-                status_by_month = recent_policies.pivot_table(
-                    index='year_month',
-                    columns='status',
-                    aggfunc='size',
-                    fill_value=0
-                )
-                
-                status_trends = {
-                    str(month): row.to_dict()
-                    for month, row in status_by_month.iterrows()
-                }
-            
-            return {
-                "period_analyzed": f"Last {months} months",
-                "total_policies_analyzed": len(recent_policies),
-                "monthly_trends": monthly_trends_dict,
-                "weekly_patterns": weekly_patterns.to_dict(),
-                "hourly_patterns": hourly_patterns,
-                "growth_analysis": growth_analysis,
-                "seasonal_analysis": seasonal_analysis,
-                "status_trends": status_trends,
-                "summary_statistics": {
-                    "avg_policies_per_month": round(len(recent_policies) / months, 2),
-                    "peak_month": str(monthly_counts.idxmax()) if len(monthly_counts) > 0 else None,
-                    "peak_month_count": int(monthly_counts.max()) if len(monthly_counts) > 0 else 0,
-                    "most_active_day": weekly_patterns.idxmax(),
-                    "most_active_hour": max(hourly_patterns, key=hourly_patterns.get) if hourly_patterns else None
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"Error in policy trends analysis: {e}")
-            raise Exception(f"Error analyzing policy trends: {str(e)}")
     
     def _analyze_code_patterns(self, codes: pd.Series) -> Dict[str, Any]:
         """Analiza patrones en códigos de producto"""
