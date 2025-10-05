@@ -252,7 +252,10 @@ python orchestrator.py cassandra+setup
 python orchestrator.py faker
 ```
 
-## Proyecto de Base de Datos
+## Proyecto de Ingesta de Datos + API
+```
+curl "https://github.com/V-Yeimi19/API-Analytic-y-DBs.git"
+```
 
 ## Instalación y Configuración de la API
 
@@ -319,6 +322,7 @@ Desde el directorio raíz del proyecto:
    ```env
    AWS_ACCESS_KEY_ID=tu_clave_de_acceso
    AWS_SECRET_ACCESS_KEY=tu_clave_secreta
+   AWS_SESSION_TOKEN=token_secreto  (si es cuenta académica de AWS)
    AWS_DEFAULT_REGION=us-east-1
    S3_BUCKET=nombre-del-bucket
    ```
