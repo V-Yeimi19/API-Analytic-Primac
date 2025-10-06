@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
-from .s3_data_manager import s3_manager
+from s3_data_manager import s3_manager
 import logging
 
 logger = logging.getLogger(__name__)

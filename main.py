@@ -5,15 +5,15 @@ from datetime import datetime
 from typing import Optional
 
 # Importar módulos de análisis S3
-from .s3_data_manager import s3_manager
-from .mysql_s3_analytics import mysql_analytics
-from .postgresql_s3_analytics import postgresql_analytics
-from .cassandra_s3_analytics import cassandra_analytics
-from .cross_microservice_analytics import cross_analytics
+from s3_data_manager import s3_manager
+from mysql_s3_analytics import mysql_analytics
+from postgresql_s3_analytics import postgresql_analytics
+from cassandra_s3_analytics import cassandra_analytics
+from cross_microservice_analytics import cross_analytics
 
 app = FastAPI(
-    title="API Analytics - Primac S3 (Simplified)",
-    description="API simplificada para análisis de datos desde S3 - 2 consultas por microservicio + 3 cross-microservice",
+    title="API Analytics - Primac S3",
+    description="API para análisis de datos desde S3",
     version="2.0.0"
 )
 
@@ -22,8 +22,8 @@ app = FastAPI(
 @app.get("/", tags=["health"])
 def root():
     return {
-        "message": "API Analytics - Primac S3 (Simplified)", 
-        "version": "2.0.0", 
+        "message": "API Analytics - Primac S3", 
+        "version": app.version, 
         "status": "OK",
         "data_source": "S3 Bucket",
         "available_databases": ["MySQL", "PostgreSQL", "Cassandra"],
