@@ -18,23 +18,26 @@ class CassandraAnalytics:
         try:
             claims_df = self.s3_manager.get_cassandra_data('reclamos')
             
-            total_claims = len(claims_df)
-            
+            total_claims = int(len(claims_df))
+
             # Análisis por estado de reclamo
-            status_distribution = claims_df['estado'].value_counts().to_dict() if 'estado' in claims_df.columns else {}
-            
+            status_distribution = {
+                k: int(v) 
+                for k, v in claims_df['estado'].value_counts().to_dict().items()
+            } if 'estado' in claims_df.columns else {}       
+
             # Análisis de montos
             amount_stats = {}
             if 'monto' in claims_df.columns:
                 valid_amounts = claims_df['monto'].dropna()
                 
                 amount_stats = {
-                    "total_claimed_amount": round(valid_amounts.sum(), 2),
-                    "average_claim_amount": round(valid_amounts.mean(), 2),
-                    "median_claim_amount": round(valid_amounts.median(), 2),
-                    "max_claim_amount": round(valid_amounts.max(), 2),
-                    "min_claim_amount": round(valid_amounts.min(), 2),
-                    "std_claim_amount": round(valid_amounts.std(), 2)
+                    "total_claimed_amount": float(round(valid_amounts.sum(), 2)),
+                    "average_claim_amount": float(round(valid_amounts.mean(), 2)),
+                    "median_claim_amount": float(round(valid_amounts.median(), 2)),
+                    "max_claim_amount": float(round(valid_amounts.max(), 2)),
+                    "min_claim_amount": float(round(valid_amounts.min(), 2)),
+                    "std_claim_amount": float(round(valid_amounts.std(), 2))
                 }
                 
                 # Distribución por rangos de monto
@@ -42,7 +45,7 @@ class CassandraAnalytics:
                 labels = ['< 1K', '1K-5K', '5K-10K', '10K-50K', '50K+']
                 claims_df['amount_range'] = pd.cut(valid_amounts, bins=bins, labels=labels, include_lowest=True)
                 amount_distribution = claims_df['amount_range'].value_counts().to_dict()
-                amount_stats["amount_distribution"] = {str(k): v for k, v in amount_distribution.items()}
+                amount_stats["amount_distribution"] = {str(k): int(v) for k, v in amount_distribution.items()}
             
             # Análisis temporal
             temporal_analysis = {}
@@ -52,7 +55,7 @@ class CassandraAnalytics:
                 # Reclamos por mes
                 claims_df['month_year'] = claims_df['fecha_reclamo'].dt.to_period('M')
                 monthly_claims = claims_df['month_year'].value_counts().sort_index().tail(12)
-                temporal_analysis['monthly_claims'] = {str(k): v for k, v in monthly_claims.items()}
+                temporal_analysis['monthly_claims'] = {str(k): int(v) for k, v in monthly_claims.items()}
                 
                 # Reclamos recientes
                 recent_date = datetime.now() - timedelta(days=30)
@@ -62,14 +65,14 @@ class CassandraAnalytics:
                 # Día de la semana más común para reclamos
                 claims_df['day_of_week'] = claims_df['fecha_reclamo'].dt.day_name()
                 day_distribution = claims_df['day_of_week'].value_counts()
-                temporal_analysis['claims_by_day_of_week'] = day_distribution.to_dict()
-            
+                temporal_analysis['claims_by_day_of_week'] = {k: int(v) for k, v in day_distribution.to_dict().items()}
+
             # Análisis por tipo de reclamo (si existe campo tipo)
             type_analysis = {}
             if 'tipo_reclamo' in claims_df.columns:
                 type_distribution = claims_df['tipo_reclamo'].value_counts()
                 type_analysis = {
-                    "most_common_types": type_distribution.head(10).to_dict(),
+                    "most_common_types": {k: int(v) for k, v in type_distribution.head(10).to_dict().items()},
                     "total_claim_types": claims_df['tipo_reclamo'].nunique()
                 }
             
@@ -80,9 +83,9 @@ class CassandraAnalytics:
                 "temporal_analysis": temporal_analysis,
                 "type_analysis": type_analysis,
                 "data_quality": {
-                    "claims_with_amount": (~claims_df['monto'].isnull()).sum() if 'monto' in claims_df.columns else 0,
-                    "claims_with_date": (~claims_df['fecha_reclamo'].isnull()).sum() if 'fecha_reclamo' in claims_df.columns else 0,
-                    "claims_with_status": (~claims_df['estado'].isnull()).sum() if 'estado' in claims_df.columns else 0
+                    "claims_with_amount": int((~claims_df['monto'].isnull()).sum()) if 'monto' in claims_df.columns else 0,
+                    "claims_with_date": int((~claims_df['fecha_reclamo'].isnull()).sum()) if 'fecha_reclamo' in claims_df.columns else 0,
+                    "claims_with_status": int((~claims_df['estado'].isnull()).sum()) if 'estado' in claims_df.columns else 0
                 }
             }
             
@@ -158,8 +161,8 @@ class CassandraAnalytics:
                 payments_by_weekday = payments_df['weekday'].value_counts()
                 
                 weekday_analysis = {
-                    'claims_by_weekday': claims_by_weekday.to_dict(),
-                    'payments_by_weekday': payments_by_weekday.to_dict(),
+                    'claims_by_weekday': {k: int(v) for k, v in claims_by_weekday.to_dict().items()},
+                    'payments_by_weekday': {k: int(v) for k, v in payments_by_weekday.to_dict().items()},
                     'highest_claims_day': claims_by_weekday.idxmax(),
                     'highest_payments_day': payments_by_weekday.idxmax()
                 }
@@ -178,21 +181,21 @@ class CassandraAnalytics:
                 payments_by_range = payments_df['amount_range'].value_counts()
                 
                 amount_range_analysis = {
-                    'claims_by_amount_range': {str(k): v for k, v in claims_by_range.items()},
-                    'payments_by_amount_range': {str(k): v for k, v in payments_by_range.items()},
+                    'claims_by_amount_range': {str(k): int(v) for k, v in claims_by_range.items()},
+                    'payments_by_amount_range': {str(k): int(v) for k, v in payments_by_range.items()},
                     'dominant_claims_range': str(claims_by_range.idxmax()),
                     'dominant_payments_range': str(payments_by_range.idxmax())
                 }
             
             # Estadísticas comparativas generales
             general_stats = {
-                'total_claims': len(claims_df),
-                'total_payments': len(payments_df),
-                'claims_to_payments_ratio': round(len(claims_df) / len(payments_df), 2) if len(payments_df) > 0 else 0,
-                'avg_claim_amount': round(claims_df['monto'].mean(), 2) if 'monto' in claims_df.columns else 0,
-                'avg_payment_amount': round(payments_df['monto'].mean(), 2) if 'monto' in payments_df.columns else 0,
-                'total_claims_amount': round(claims_df['monto'].sum(), 2) if 'monto' in claims_df.columns else 0,
-                'total_payments_amount': round(payments_df['monto'].sum(), 2) if 'monto' in payments_df.columns else 0
+                'total_claims': int(len(claims_df)), # <-- CONVERTIR a int
+                'total_payments': int(len(payments_df)), # <-- CONVERTIR a int
+                'claims_to_payments_ratio': float(round(len(claims_df) / len(payments_df), 2)) if len(payments_df) > 0 else 0.0, # <-- CONVERTIR a float
+                'avg_claim_amount': float(round(claims_df['monto'].mean(), 2)) if 'monto' in claims_df.columns else 0.0, # <-- CONVERTIR a float
+                'avg_payment_amount': float(round(payments_df['monto'].mean(), 2)) if 'monto' in payments_df.columns else 0.0, # <-- CONVERTIR a float
+                'total_claims_amount': float(round(claims_df['monto'].sum(), 2)) if 'monto' in claims_df.columns else 0.0, # <-- CONVERTIR a float
+                'total_payments_amount': float(round(payments_df['monto'].sum(), 2)) if 'monto' in payments_df.columns else 0.0
             }
             
             if general_stats['total_payments_amount'] > 0:
